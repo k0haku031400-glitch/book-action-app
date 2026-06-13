@@ -1,5 +1,15 @@
 # Vercel デプロイガイド
 
+## デプロイ済み URL
+
+| サービス | URL |
+|---------|-----|
+| **本番アプリ** | https://book-action-app.vercel.app |
+| **GitHub** | https://github.com/k0haku031400-glitch/book-action-app |
+| **Vercel Dashboard** | https://vercel.com/kohakus-projects-8167aab9/book-action-app |
+
+`main` ブランチへの push で自動デプロイされます。
+
 ## 前提
 
 - [GitHub](https://github.com) アカウント
