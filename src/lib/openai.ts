@@ -65,14 +65,20 @@ ${input.userGoals}
     throw new Error("AIからの応答がありません");
   }
 
-  const parsed = JSON.parse(content) as GeneratedPlan;
+  const raw = JSON.parse(content) as Record<string, unknown>;
 
-  if (!Array.isArray(parsed.tasks) || parsed.tasks.length === 0) {
+  // トップレベルキーを小文字に正規化（"Tasks" → "tasks" などの表記ゆれを許容）
+  const normalized: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    normalized[k.toLowerCase()] = v;
+  }
+
+  if (!Array.isArray(normalized.tasks) || normalized.tasks.length === 0) {
     throw new Error("AIの応答にタスクが含まれていません");
   }
-  if (!Array.isArray(parsed.goals)) {
+  if (!Array.isArray(normalized.goals)) {
     throw new Error("AIの応答の形式が不正です");
   }
 
-  return parsed;
+  return normalized as unknown as GeneratedPlan;
 }
