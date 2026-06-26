@@ -1,33 +1,50 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 
-export function DashboardClient() {
-  const [data, setData] = useState<Awaited<
-    ReturnType<typeof fetchDashboard>
-  > | null>(null);
-  const [loading, setLoading] = useState(true);
+type DashboardData = Awaited<ReturnType<typeof fetchDashboard>>;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await fetchDashboard();
-      setData(result);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+export function DashboardClient() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    fetchDashboard()
+      .then((result) => {
+        setData(result);
+        setError(false);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [retryCount]);
 
-  if (loading || !data) {
+  function retry() {
+    setLoading(true);
+    setRetryCount((c) => c + 1);
+  }
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <p className="text-muted-foreground">データの取得に失敗しました</p>
+        <button
+          onClick={retry}
+          className="text-sm underline text-muted-foreground hover:text-foreground"
+        >
+          再試行
+        </button>
       </div>
     );
   }

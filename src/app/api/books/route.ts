@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
 import { bookSchema } from "@/lib/validations";
 import { sanitizeInput } from "@/lib/utils-app";
 import { generateActionPlan } from "@/lib/openai";

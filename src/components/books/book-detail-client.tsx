@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -37,24 +37,26 @@ export function BookDetailClient({ bookId }: BookDetailClientProps) {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/books/${bookId}`);
-      if (!res.ok) throw new Error("Not found");
-      const data = await res.json();
-      setBook(data);
-    } catch {
-      toast.error("本が見つかりません");
-      router.push("/dashboard");
-    } finally {
-      setLoading(false);
-    }
-  }, [bookId, router]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    fetch(`/api/books/${bookId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then((data) => setBook(data))
+      .catch(() => {
+        toast.error("本が見つかりません");
+        router.push("/dashboard");
+      })
+      .finally(() => setLoading(false));
+  }, [bookId, refreshKey, router]);
+
+  function load() {
+    setLoading(true);
+    setRefreshKey((k) => k + 1);
+  }
 
   async function generatePlan() {
     setGenerating(true);

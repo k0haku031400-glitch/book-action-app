@@ -1,4 +1,4 @@
-import { startOfDay, isSameDay } from "date-fns";
+import { startOfDay, isSameDay, subDays } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { taskUpdateSchema } from "@/lib/validations";
 import {
@@ -33,10 +33,10 @@ async function updateUserStats(userId: string, points: number) {
 
   let newStreak = stats.currentStreak;
   if (!lastActive || !isSameDay(lastActive, today)) {
-    const yesterday = startOfDay(new Date(Date.now() - 86400000));
+    const yesterday = subDays(today, 1);
     if (lastActive && isSameDay(lastActive, yesterday)) {
       newStreak = stats.currentStreak + 1;
-    } else if (!lastActive || !isSameDay(lastActive, today)) {
+    } else {
       newStreak = 1;
     }
   }
@@ -100,11 +100,14 @@ export async function PATCH(
       },
     });
 
+    // ポイント付与は未完了→完了への変更のみ（再チェックによる二重付与を防ぐ）
     if (!wasCompleted && nowCompleted) {
-      await updateUserStats(
-        session.user.id,
-        pointsForTask(task.frequency)
-      );
+      try {
+        await updateUserStats(session.user.id, pointsForTask(task.frequency));
+      } catch (statsError) {
+        console.error("Stats update failed:", statsError);
+        // タスク更新は成功しているため、stats失敗は200で返す
+      }
     }
 
     return apiSuccess(updated);
