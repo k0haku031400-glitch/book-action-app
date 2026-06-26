@@ -12,24 +12,28 @@ export async function GET(
 
   const { id } = await params;
 
-  const book = await prisma.book.findFirst({
-    where: { id, userId: session.user.id },
-    include: {
-      actionPlan: {
-        include: {
-          tasks: {
-            orderBy: [{ weekNumber: "asc" }, { order: "asc" }],
+  try {
+    const book = await prisma.book.findFirst({
+      where: { id, userId: session.user.id },
+      include: {
+        actionPlan: {
+          include: {
+            tasks: {
+              orderBy: [{ weekNumber: "asc" }, { order: "asc" }],
+            },
           },
         },
       },
-    },
-  });
+    });
 
-  if (!book) {
-    return apiError("本が見つかりません", 404);
+    if (!book) {
+      return apiError("本が見つかりません", 404);
+    }
+
+    return apiSuccess(book);
+  } catch {
+    return apiError("本の取得に失敗しました", 500);
   }
-
-  return apiSuccess(book);
 }
 
 export async function DELETE(
@@ -41,17 +45,21 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const book = await prisma.book.findFirst({
-    where: { id, userId: session.user.id },
-  });
+  try {
+    const book = await prisma.book.findFirst({
+      where: { id, userId: session.user.id },
+    });
 
-  if (!book) {
-    return apiError("本が見つかりません", 404);
+    if (!book) {
+      return apiError("本が見つかりません", 404);
+    }
+
+    await prisma.book.delete({ where: { id } });
+
+    return apiSuccess({ success: true });
+  } catch {
+    return apiError("本の削除に失敗しました", 500);
   }
-
-  await prisma.book.delete({ where: { id } });
-
-  return apiSuccess({ success: true });
 }
 
 export async function POST(

@@ -66,5 +66,13 @@ ${input.userGoals}
   }
 
   const parsed = JSON.parse(content) as GeneratedPlan;
+
+  if (!Array.isArray(parsed.tasks) || parsed.tasks.length === 0) {
+    throw new Error("AIの応答にタスクが含まれていません");
+  }
+  if (!Array.isArray(parsed.goals)) {
+    throw new Error("AIの応答の形式が不正です");
+  }
+
   return parsed;
 }

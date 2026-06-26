@@ -4,6 +4,14 @@ import { auth } from "@/lib/auth";
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
+// 期限切れエントリを定期的に削除してメモリリークを防ぐ
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap) {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  }
+}, 60_000);
+
 export async function requireAuth(): Promise<
   Session | NextResponse<{ error: string }>
 > {
